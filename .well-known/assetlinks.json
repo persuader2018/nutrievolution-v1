@@ -1,1 +1,9 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.workers.josejavier_fernandezroman.jjfr14.twa",
+        "sha256_cert_fingerprints": ["B9:D7:E0:72:AE:66:49:11:45:FE:72:DD:58:78:F3:BA:81:3B:E7:E6:F7:CC:B8:50:C0:BB:22:AD:7F:80:06:EC"]
+      }
+    }]
 
