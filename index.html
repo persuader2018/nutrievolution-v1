@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MacroSnap PRO - Diario Nutricional</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --green: #059669;
+      --green-light: #d1fae5;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --rose: #e11d48;
+      --rose-light: #ffe4e6;
+      --indigo: #4f46e5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 14px 14px 95px 14px;
+      margin: 0;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .card {
+      background: var(--card);
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 4px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--green);
+      background: #ffffff;
+    }
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      display: block;
+      margin-top: 6px;
+    }
+    .btn {
+      background: var(--green);
+      color: #ffffff;
+      border: none;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      width: 100%;
+      margin-top: 10px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
+    }
+    .btn:active { transform: scale(0.99); }
+    .btn-blue { background: var(--blue); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2); }
+    .btn-amber { background: #f59e0b; color: #0f172a; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2); }
+    .btn-indigo { background: var(--indigo); box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2); }
+    .btn-outline { background: #f8fafc; color: var(--text); border: 1px solid #cbd5e1; box-shadow: none; }
+    .btn-outline.active { background: var(--amber-light); border-color: #f59e0b; color: #92400e; }
+    .btn-red { background: #fee2e2; color: var(--rose); width: auto; padding: 6px 10px; font-size: 12px; margin: 0; box-shadow: none; }
+    .btn-star { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 2px 6px; line-height: 1; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      gap: 8px;
+    }
+    .item:last-child { border-bottom: none; }
+    .thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; }
+    .lista-scroll { max-height: 250px; overflow-y: auto; margin-top: 8px; padding-right: 4px; }
+    .hide { display: none !important; }
+
+    /* Barra de navegación inferior clara */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr;
+      padding: 10px 14px; gap: 10px; z-index: 99;
+      max-width: 540px; margin: 0 auto;
+      box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.05);
+    }
+    .nav-btn {
+      background: #f1f5f9; color: var(--muted); border: 1px solid var(--border);
+      padding: 11px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; text-align: center;
+    }
+    .nav-btn.active { background: var(--green); color: #ffffff; border-color: var(--green); box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25); }
+
+    /* Resumen de progreso claro */
+    .progress-box { background: #f8fafc; padding: 14px; border-radius: 14px; border: 1px solid var(--border); margin-top: 12px; }
+    .bar-container { width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-top: 5px; }
+    .bar-fill { height: 100%; border-radius: 99px; transition: width 0.35s ease; }
+    .macro-card { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
+
+    /* Modal de Foto a Pantalla Completa */
+    .modal-foto {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.88);
+      z-index: 200;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 16px;
+    }
+    .modal-foto img {
+      max-width: 100%; max-height: 78vh; border-radius: 12px; object-fit: contain; background: #000;
+    }
+    .chip-cat {
+      font-size: 11px; padding: 5px 10px; border-radius: 99px; border: 1px solid #cbd5e1;
+      background: #f8fafc; color: var(--text); cursor: pointer; white-space: nowrap; font-weight: 600;
+    }
+    .chip-cat.active { background: var(--text); color: #fff; border-color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <!-- MODAL PARA VER FOTO A TAMAÑO REAL -->
+  <div id="modalZoomFoto" class="modal-foto hide">
+    <div style="width:100%; max-width:480px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; color:#fff;">
+      <strong id="tituloModalFoto" style="font-size:14px;">Vista en Tamaño Real</strong>
+      <button type="button" id="btnCerrarModalFoto" class="btn btn-red" style="background:#ef4444; color:#fff; font-size:13px;">✕ Cerrar</button>
+    </div>
+    <img id="imgZoomReal" src="" alt="Foto tamaño real">
+  </div>
+
+  <!-- ================= VISTA 1: DIARIO ================= -->
+  <div id="secDiario">
+
+    <!-- CABECERA Y RESUMEN VISUAL -->
+    <div class="card">
+      <div class="grid2" style="align-items: center;">
+        <div>
+          <label style="color:var(--green); font-size:12px;">📅 FECHA DEL DIARIO</label>
+          <input type="date" id="selectorFecha" style="padding:8px 10px; font-weight:700;">
+        </div>
+        <div>
+          <button type="button" class="btn btn-indigo" id="btnExportar" style="margin-top:20px; padding:10px; font-size:12px;">
+            ☁️ Exportar Nota (TXT)
+          </button>
+        </div>
+      </div>
+
+      <!-- PESO Y FOTO CORPORAL DEL DÍA -->
+      <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border);" class="grid2">
+        <div>
+          <label>⚖️ Peso de hoy (kg):</label>
+          <input type="number" id="inputPesoDia" step="0.1" placeholder="Ej. 76.0" style="font-weight:bold;">
+        </div>
+        <div>
+          <label>📸 Foto corporal del día:</label>
+          <button type="button" class="btn btn-outline" id="btnSubirFotoDia" style="margin-top:4px; padding:9px; font-size:12px;">
+            📷 Subir / Cambiar Foto
+          </button>
+          <input type="file" id="inputFotoDia" accept="image/*" class="hide">
+        </div>
+      </div>
+
+      <!-- Miniatura de foto corporal si existe hoy -->
+      <div id="boxFotoCuerpoHoy" class="hide" style="margin-top:10px; background:#f8fafc; padding:8px; border-radius:10px; border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img id="thumbCuerpoHoy" src="" class="thumb" title="Toca para ampliar">
+          <div>
+            <div style="font-size:12px; font-weight:bold; color:var(--green);">✅ Foto corporal registrada</div>
+            <div style="font-size:11px; color:var(--muted);">Toca la imagen para ver en tamaño real</div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-red" id="btnBorrarFotoHoy">🗑️ Borrar</button>
+      </div>
+
+      <!-- TARJETA DE PROGRESO Y METAS -->
+      <div class="progress-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; font-weight:800; color:var(--text);">🎯 Resumen Diario (Objetivo Definición)</span>
+          <button type="button" class="btn btn-outline" id="btnToggleMetas" style="width:auto; padding:4px 10px; font-size:11px; margin:0;">⚙️ Ajustar Metas</button>
+        </div>
+
+        <!-- Editor manual o automático de metas -->
+        <div id="panelEditarMetas" class="hide" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">Puedes personalizar tus metas o recalcularlas según tu peso:</div>
+          <div class="grid4">
+            <div><label>Kcal</label><input type="number" id="editMetaKcal" value="2200"></div>
+            <div><label>Prot (g)</label><input type="number" id="editMetaProt" value="165"></div>
+            <div><label>Carb (g)</label><input type="number" id="editMetaCarb" value="200"></div>
+            <div><label>Gras (g)</label><input type="number" id="editMetaGrasa" value="68"></div>
+          </div>
+          <div class="grid2" style="margin-top:8px;">
+            <button type="button" class="btn btn-outline" id="btnAutoMetasPeso" style="margin:0; padding:8px; font-size:11px;">🔄 Auto-calcular por mi Peso</button>
+            <button type="button" class="btn btn-blue" id="btnGuardarMetas" style="margin:0; padding:8px; font-size:11px;">💾 Guardar Metas Fijas</button>
+          </div>
+        </div>
+
+        <!-- Barra Principal de Calorías -->
+        <div style="margin-top:12px; background:#fff; padding:12px; border-radius:12px; border:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div>
+              <span style="font-size:22px; font-weight:800; color:var(--green);" id="txtKcalConsumidas">0</span>
+              <span style="font-size:13px; color:var(--muted);"> / <span id="txtKcalMeta">2200</span> kcal</span>
+            </div>
+            <span id="txtKcalRestantes" style="font-size:12px; font-weight:700; color:var(--green); background:var(--green-light); padding:3px 8px; border-radius:99px;">Restan 2200 kcal</span>
+          </div>
+          <div class="bar-container" style="height:12px; margin-top:8px;">
+            <div id="barKcal" class="bar-fill" style="background:linear-gradient(90deg, #10b981, #059669); width:0%;"></div>
+          </div>
+        </div>
+
+        <!-- 3 Tarjetas Visuales de Macronutrientes -->
+        <div class="grid3" style="margin-top:10px;">
+          <div class="macro-card">
+            <div style="font-size:11px; font-weight:700; color:var(--blue);">PROTEÍNAS</div>
+            <div style="font-size:15px; font-weight:800; margin:3px 0;"><span id="txtProtConsumidas">0</span><span style="font-size:11px; color:var(--muted); font-weight:normal;">/<span id="txtProtMeta">165</span>g</span></div>
+            <div class="bar-container" style="height:7px;"><div id="barProt" class="bar-fill" style="background:var(--blue); width:0%;"></div></div>
+            <div id="pctProt" style="font-size:10px; color:var(--muted); margin-top:3px;">0%</div>
+          </div>
+
+          <div class="macro-card">
+            <div style="font-size:11px; font-weight:700; color:var(--amber);">CARBOS</div>
+            <div style="font-size:15px; font-weight:800; margin:3px 0;"><span id="txtCarbConsumidos">0</span><span style="font-size:11px; color:var(--muted); font-weight:normal;">/<span id="txtCarbMeta">200</span>g</span></div>
+            <div class="bar-container" style="height:7px;"><div id="barCarb" class="bar-fill" style="background:#f59e0b; width:0%;"></div></div>
+            <div id="pctCarb" style="font-size:10px; color:var(--muted); margin-top:3px;">0%</div>
+          </div>
+
+          <div class="macro-card">
+            <div style="font-size:11px; font-weight:700; color:var(--rose);">GRASAS</div>
+            <div style="font-size:15px; font-weight:800; margin:3px 0;"><span id="txtGrasaConsumidas">0</span><span style="font-size:11px; color:var(--muted); font-weight:normal;">/<span id="txtGrasaMeta">68</span>g</span></div>
+            <div class="bar-container" style="height:7px;"><div id="barGrasa" class="bar-fill" style="background:var(--rose); width:0%;"></div></div>
+            <div id="pctGrasa" style="font-size:10px; color:var(--muted); margin-top:3px;">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÓDULO BASE DE DATOS AMPLIADA + FAVORITOS -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;">🍎 Base de Alimentos y Favoritos</h3>
+        <button type="button" id="btnFiltroFav" class="btn btn-outline" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">
+          ⭐ Solo Favoritos
+        </button>
+      </div>
+
+      <!-- Filtros rápidos por categoría -->
+      <div style="display:flex; gap:6px; overflow-x:auto; padding:8px 0 4px 0;" id="barraCategorias">
+        <button type="button" class="chip-cat active" data-cat="Todos">Todos</button>
+        <button type="button" class="chip-cat" data-cat="Frutas">🍎 Frutas</button>
+        <button type="button" class="chip-cat" data-cat="Carnes">🥩 Carnes</button>
+        <button type="button" class="chip-cat" data-cat="Pescados">🐟 Pescados</button>
+        <button type="button" class="chip-cat" data-cat="Huevos/Lácteos">🥚 Lácteos/Huevos</button>
+        <button type="button" class="chip-cat" data-cat="Legumbres/Cereales">🍚 Hidratos/Legumbres</button>
+        <button type="button" class="chip-cat" data-cat="Verduras">🥦 Verduras</button>
+        <button type="button" class="chip-cat" data-cat="Grasas/Supl">🥜 Grasas/Supl.</button>
+      </div>
+
+      <div class="grid2" style="margin-top:4px;">
+        <div>
+          <label>Peso a añadir (g):</label>
+          <input type="number" id="inputGramosBd" value="100" min="1" style="font-weight:bold; color:var(--green);">
+        </div>
+        <div>
+          <label>Buscar alimento:</label>
+          <input type="text" id="inputBuscarBd" placeholder="Ej. manzana, merluza, lomo...">
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-amber" id="btnOnlineBd" style="padding:9px; font-size:12px; margin-top:8px;">
+        🌐 Buscar más en Open Food Facts (Online)
+      </button>
+      <div id="msgBd" style="font-size:11px; color:var(--muted); margin-top:6px;">
+        Toca <b>⭐</b> para guardar en tus favoritos o <b>+ Añadir</b> para sumarlo hoy:
+      </div>
+      <div id="listaBd" class="lista-scroll"></div>
+    </div>
+
+    <!-- MÓDULO ANALIZAR PLATO POR IA (POR DESCRIPCIÓN DE TEXTO Y/O FOTO) -->
+    <div class="card">
+      <h3>✨ Analizar Plato por IA</h3>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">
+        Describe el plato o alimento, sube una foto, o combina ambos para que la IA calcule su peso y nutrientes:
+      </div>
+
+      <!-- Campo dedicado para nombre o descripción del plato -->
+      <label style="color:var(--blue); font-weight:700;">📝 Nombre o descripción del alimento / plato:</label>
+      <textarea id="descripcionIaInput" rows="2" placeholder="Ej: Salteado de garbanzos con espinacas, cebolla y 2 huevos / 1 plato de lentejas con chorizo..."></textarea>
+
+      <!-- Botones opcionales para adjuntar foto -->
+      <label style="margin-top:10px;">📸 Añadir foto del plato (Opcional):</label>
+      <div class="grid2" style="margin-top:4px;">
+        <button type="button" class="btn btn-outline" id="btnCamara" style="margin:0; padding:9px; font-size:12px;">📷 Hacer Foto</button>
+        <button type="button" class="btn btn-outline" id="btnGaleria" style="margin:0; padding:9px; font-size:12px;">🖼️ Galería / Google Fotos</button>
+      </div>
+      <input type="file" id="inputCamara" accept="image/*" capture="environment" class="hide">
+      <input type="file" id="inputGaleria" accept="image/*" class="hide">
+
+      <!-- Contenedor de previsualización de foto con opción de quitarla -->
+      <div id="boxPreviewPlato" class="hide" style="margin-top:8px; position:relative;">
+        <img id="previewFotoPlato" style="width:100%; max-height:160px; object-fit:cover; border-radius:10px; border:1px solid var(--border);">
+        <button type="button" id="btnQuitarFotoPlato" class="btn btn-red" style="position:absolute; top:8px; right:8px; background:rgba(15,23,42,0.8); color:#fff;">✕ Quitar foto</button>
+      </div>
+
+      <div style="margin-top:6px;">
+        <label>🔑 Clave API Gemini (Opcional - Guardada en tu móvil):</label>
+        <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+      </div>
+
+      <button type="button" class="btn btn-blue" id="btnAnalizar">✨ Analizar Plato con IA (Texto y/o Foto)</button>
+      <div id="estadoAnalisisIa" style="font-size:11px; color:var(--blue); margin-top:6px; text-align:center; font-weight:600;"></div>
+
+      <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
+        <div class="grid2">
+          <div><label>Alimento / Plato detectado:</label><input type="text" id="resNombre" placeholder="Resultado del análisis..."></div>
+          <div><label style="color:var(--green);">⚖️ Peso ración (g):</label><input type="number" id="resPesoGramos" value="200" min="1" oninput="recalcularMacroProporcional()"></div>
+        </div>
+        <div class="grid4" style="margin-top:4px;">
+          <div><label>Prot (g)</label><input type="number" id="resP" value="0" step="0.1"></div>
+          <div><label>Carbs (g)</label><input type="number" id="resC" value="0" step="0.1"></div>
+          <div><label>Grasa (g)</label><input type="number" id="resF" value="0" step="0.1"></div>
+          <div><label>Kcal</label><input type="number" id="resKcal" value="0"></div>
+        </div>
+        <div class="grid2" style="margin-top:10px;">
+          <button type="button" class="btn btn-outline" id="btnFavDesdeFoto" style="margin:0;">⭐ Guardar en Favoritos</button>
+          <button type="button" class="btn" id="btnGuardarFoto" style="margin:0;">💾 Añadir al Día</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTA DE ALIMENTOS REGISTRADOS EN EL DÍA -->
+    <div class="card">
+      <h3>🍽️ Alimentos Registrados Hoy (<span id="numGuardados">0</span>)</h3>
+      <div id="listaGuardados" class="lista-scroll" style="max-height:300px;"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= VISTA 2: EVOLUCIÓN Y GRÁFICAS AVANZADAS ================= -->
+  <div id="secEvolucion" class="hide">
+
+    <div class="card">
+      <h3>📅 Filtrar Periodo de Evolución</h3>
+      <div class="grid2">
+        <div><label>Desde:</label><input type="date" id="filtroFechaDesde" style="padding:7px; font-size:12px;"></div>
+        <div><label>Hasta:</label><input type="date" id="filtroFechaHasta" style="padding:7px; font-size:12px;"></div>
+      </div>
+      <button type="button" class="btn btn-blue" id="btnFiltrarEvolucion" style="padding:8px; font-size:12px;">Aplicar Filtro de Fechas</button>
+      <div id="resumenGlobalBox" style="margin-top:10px; font-size:12px; color:var(--muted); background:#f8fafc; padding:10px; border-radius:10px; border:1px solid var(--border);"></div>
+    </div>
+
+    <!-- 5 GRÁFICAS CON ESCALA Y LÍNEA DE OBJETIVO -->
+    <div class="card">
+      <h3>🔥 1. Calorías Diarias vs. Objetivo</h3>
+      <div id="svgChartKcal"></div>
+    </div>
+
+    <div class="card">
+      <h3>💪 2. Proteínas (g) vs. Objetivo</h3>
+      <div id="svgChartProt"></div>
+    </div>
+
+    <div class="card">
+      <h3>🌾 3. Carbohidratos (g) vs. Objetivo</h3>
+      <div id="svgChartCarb"></div>
+    </div>
+
+    <div class="card">
+      <h3>🥑 4. Grasas (g) vs. Objetivo</h3>
+      <div id="svgChartGrasa"></div>
+    </div>
+
+    <div class="card">
+      <h3>⚖️ 5. Evolución de Peso Corporal (kg)</h3>
+      <div id="svgChartPeso"></div>
+    </div>
+
+    <!-- HISTÓRICO DE DÍAS CON FOTOS AMPLIABLES Y EDITABLES -->
+    <div class="card">
+      <h3>🗂️ Registro Día a Día y Fotos de Progreso</h3>
+      <p style="font-size:12px; color:var(--muted); margin:0 0 10px 0;">Toca cualquier foto para verla en <b>tamaño real</b>, cambiarla o eliminarla:</p>
+      <div id="contenedorEvolucion"></div>
+    </div>
+
+  </div>
+
+  <!-- BARRA DE NAVEGACIÓN INFERIOR -->
+  <div class="bottom-nav">
+    <button type="button" class="nav-btn active" id="navDiario">📖 Diario de Hoy</button>
+    <button type="button" class="nav-btn" id="navEvolucion">📈 Gráficas y Evolución</button>
+  </div>
+
+  <script>
+    // ================= 1. AMPLIA BASE DE DATOS DE ALIMENTOS BÁSICOS Y FRESCOS (Por 100g) =================
+    var BASE_ALIMENTOS_INICIAL = [
+      // FRUTAS BÁSICAS
+      { n: 'Manzana fresca (1 ud mediana = 180g)', cat: 'Frutas', k: 52, p: 0.3, c: 13.8, f: 0.2 },
+      { n: 'Plátano de Canarias (1 ud pelada = 100g)', cat: 'Frutas', k: 89, p: 1.1, c: 22.8, f: 0.3 },
+      { n: 'Naranja / Mandarina fresca', cat: 'Frutas', k: 47, p: 0.9, c: 11.8, f: 0.1 },
+      { n: 'Pera fresca', cat: 'Frutas', k: 57, p: 0.4, c: 15.0, f: 0.1 },
+      { n: 'Fresas / Frutos rojos', cat: 'Frutas', k: 32, p: 0.7, c: 7.7, f: 0.3 },
+      { n: 'Kiwi verde / amarillo', cat: 'Frutas', k: 61, p: 1.1, c: 14.7, f: 0.5 },
+      { n: 'Melocotón / Nectarina', cat: 'Frutas', k: 39, p: 0.9, c: 9.5, f: 0.3 },
+      { n: 'Sandía fresca', cat: 'Frutas', k: 30, p: 0.6, c: 7.6, f: 0.2 },
+      { n: 'Melón fresco', cat: 'Frutas', k: 34, p: 0.8, c: 8.2, f: 0.2 },
+      { n: 'Uvas frescas', cat: 'Frutas', k: 69, p: 0.7, c: 18.1, f: 0.2 },
+      { n: 'Piña natural', cat: 'Frutas', k: 50, p: 0.5, c: 13.1, f: 0.1 },
+
+      // CARNES FRESCAS Y EMBUTIDOS MAGROS
+      { n: 'Pechuga de pollo fresca (plancha/cruda)', cat: 'Carnes', k: 110, p: 23.0, c: 0.0, f: 1.5 },
+      { n: 'Contramuslo de pollo sin piel', cat: 'Carnes', k: 145, p: 19.5, c: 0.0, f: 7.2 },
+      { n: 'Pechuga de pavo fresca (filete)', cat: 'Carnes', k: 105, p: 24.0, c: 0.0, f: 1.0 },
+      { n: 'Ternera magra (filete a la plancha)', cat: 'Carnes', k: 155, p: 21.5, c: 0.0, f: 7.5 },
+      { n: 'Solomillo de ternera / cerdo', cat: 'Carnes', k: 138, p: 22.0, c: 0.0, f: 5.2 },
+      { n: 'Lomo de cerdo fresco', cat: 'Carnes', k: 143, p: 21.0, c: 0.0, f: 6.5 },
+      { n: 'Carne picada vacuno/pollo magra', cat: 'Carnes', k: 162, p: 20.5, c: 0.0, f: 8.5 },
+      { n: 'Conejo fresco asado/guisado', cat: 'Carnes', k: 133, p: 21.8, c: 0.0, f: 4.8 },
+      { n: 'Jamón serrano / ibérico', cat: 'Carnes', k: 240, p: 31.0, c: 0.5, f: 13.0 },
+      { n: 'Jamón cocido extra / Pavo en lonchas (90%)', cat: 'Carnes', k: 98, p: 19.0, c: 1.5, f: 1.8 },
+      { n: 'Lomo embuchado', cat: 'Carnes', k: 202, p: 32.0, c: 1.0, f: 7.5 },
+
+      // PESCADOS FRESCOS Y MARISCOS
+      { n: 'Merluza fresca (plancha/horno)', cat: 'Pescados', k: 82, p: 17.5, c: 0.0, f: 1.2 },
+      { n: 'Bacalao fresco', cat: 'Pescados', k: 82, p: 18.0, c: 0.0, f: 0.7 },
+      { n: 'Salmón fresco', cat: 'Pescados', k: 208, p: 20.0, c: 0.0, f: 13.0 },
+      { n: 'Atún fresco a la plancha', cat: 'Pescados', k: 144, p: 23.3, c: 0.0, f: 4.9 },
+      { n: 'Atún claro al natural (lata escurrida)', cat: 'Pescados', k: 108, p: 24.0, c: 0.0, f: 1.0 },
+      { n: 'Atún en aceite de oliva (escurrido)', cat: 'Pescados', k: 198, p: 25.0, c: 0.0, f: 10.5 },
+      { n: 'Boquerones / Anchoas al horno o vinagre', cat: 'Pescados', k: 131, p: 20.4, c: 0.0, f: 4.8 },
+      { n: 'Sardinas frescas / en lata escurridas', cat: 'Pescados', k: 185, p: 21.0, c: 0.0, f: 11.0 },
+      { n: 'Dorada / Lubina al horno', cat: 'Pescados', k: 96, p: 19.0, c: 0.0, f: 2.0 },
+      { n: 'Emperador / Pez espada', cat: 'Pescados', k: 121, p: 20.0, c: 0.0, f: 4.2 },
+      { n: 'Sepia / Calamar a la plancha', cat: 'Pescados', k: 79, p: 16.2, c: 0.8, f: 1.1 },
+      { n: 'Gambas / Langostinos pelados', cat: 'Pescados', k: 85, p: 20.1, c: 0.0, f: 0.5 },
+
+      // HUEVOS Y LÁCTEOS
+      { n: 'Huevo entero talla M/L (1 ud = 60g)', cat: 'Huevos/Lácteos', k: 143, p: 12.6, c: 0.7, f: 9.5 },
+      { n: 'Claras de huevo líquidas pasteurizadas', cat: 'Huevos/Lácteos', k: 48, p: 11.0, c: 0.7, f: 0.2 },
+      { n: 'Queso fresco batido 0% / Skyr', cat: 'Huevos/Lácteos', k: 52, p: 9.5, c: 3.5, f: 0.1 },
+      { n: 'Yogur proteico (+Proteínas 1 ud = 120g)', cat: 'Huevos/Lácteos', k: 54, p: 10.0, c: 3.2, f: 0.1 },
+      { n: 'Yogur griego natural', cat: 'Huevos/Lácteos', k: 115, p: 4.5, c: 4.0, f: 9.0 },
+      { n: 'Leche semidesnatada', cat: 'Huevos/Lácteos', k: 46, p: 3.2, c: 4.8, f: 1.6 },
+      { n: 'Leche desnatada / Sin lactosa', cat: 'Huevos/Lácteos', k: 35, p: 3.3, c: 4.9, f: 0.2 },
+      { n: 'Queso fresco tipo Burgos', cat: 'Huevos/Lácteos', k: 174, p: 12.0, c: 2.5, f: 13.0 },
+      { n: 'Queso Cottage bajo en grasa', cat: 'Huevos/Lácteos', k: 82, p: 12.5, c: 2.5, f: 2.2 },
+      { n: 'Queso curado / semicurado', cat: 'Huevos/Lácteos', k: 380, p: 25.0, c: 1.0, f: 31.0 },
+
+      // LEGUMBRES, CEREALES Y TUBÉRCULOS
+      { n: 'Garbanzos cocidos (bote o hervidos)', cat: 'Legumbres/Cereales', k: 135, p: 7.5, c: 21.0, f: 2.2 },
+      { n: 'Lentejas cocidas', cat: 'Legumbres/Cereales', k: 116, p: 9.0, c: 20.0, f: 0.4 },
+      { n: 'Alubias / Judías blancas cocidas', cat: 'Legumbres/Cereales', k: 112, p: 7.8, c: 18.5, f: 0.5 },
+      { n: 'Edamame tostado snack (Mercadona)', cat: 'Legumbres/Cereales', k: 416, p: 43.0, c: 12.0, f: 19.0 },
+      { n: 'Arroz blanco / basmati (peso cocido)', cat: 'Legumbres/Cereales', k: 130, p: 2.7, c: 28.0, f: 0.3 },
+      { n: 'Arroz en crudo', cat: 'Legumbres/Cereales', k: 360, p: 7.0, c: 79.0, f: 0.8 },
+      { n: 'Patata cocida o asada', cat: 'Legumbres/Cereales', k: 86, p: 1.8, c: 20.0, f: 0.1 },
+      { n: 'Boniato / Batata asada', cat: 'Legumbres/Cereales', k: 90, p: 2.0, c: 21.0, f: 0.2 },
+      { n: 'Copos de avena integrales', cat: 'Legumbres/Cereales', k: 372, p: 13.5, c: 58.7, f: 7.0 },
+      { n: 'Pan 100% integral (1 rebanada = 40g)', cat: 'Legumbres/Cereales', k: 247, p: 11.0, c: 43.0, f: 3.5 },
+      { n: 'Pan blanco / Barra tradicional', cat: 'Legumbres/Cereales', k: 265, p: 8.5, c: 53.0, f: 1.5 },
+      { n: 'Pasta integral (peso cocido)', cat: 'Legumbres/Cereales', k: 124, p: 5.3, c: 26.5, f: 1.1 },
+
+      // VERDURAS Y HORTALIZAS FRESCAS
+      { n: 'Espinacas frescas / rehogadas', cat: 'Verduras', k: 25, p: 2.9, c: 3.6, f: 0.4 },
+      { n: 'Brócoli / Coliflor al vapor', cat: 'Verduras', k: 34, p: 2.8, c: 6.6, f: 0.4 },
+      { n: 'Tomate natural en ensalada', cat: 'Verduras', k: 18, p: 0.9, c: 3.9, f: 0.2 },
+      { n: 'Cebolla / Pimiento asado o salteado', cat: 'Verduras', k: 32, p: 1.1, c: 7.0, f: 0.2 },
+      { n: 'Calabacín / Berenjena a la plancha', cat: 'Verduras', k: 22, p: 1.2, c: 4.2, f: 0.2 },
+      { n: 'Judías verdes cocidas', cat: 'Verduras', k: 31, p: 1.8, c: 7.0, f: 0.1 },
+      { n: 'Champiñones / Setas salteadas', cat: 'Verduras', k: 26, p: 3.1, c: 3.3, f: 0.3 },
+      { n: 'Ensalada verde variada (lechuga/canónigos)', cat: 'Verduras', k: 17, p: 1.3, c: 2.9, f: 0.2 },
+
+      // GRASAS SALUDABLES Y SUPLEMENTOS
+      { n: 'Aceite de Oliva Virgen Extra (1 cda = 10g)', cat: 'Grasas/Supl', k: 884, p: 0.0, c: 0.0, f: 100.0 },
+      { n: 'Aguacate fresco', cat: 'Grasas/Supl', k: 160, p: 2.0, c: 8.5, f: 14.7 },
+      { n: 'Nueces peladas naturales', cat: 'Grasas/Supl', k: 654, p: 15.2, c: 13.7, f: 65.2 },
+      { n: 'Almendras naturales / tostadas', cat: 'Grasas/Supl', k: 579, p: 21.2, c: 21.6, f: 49.9 },
+      { n: 'Crema de cacahuete 100%', cat: 'Grasas/Supl', k: 588, p: 25.0, c: 20.0, f: 50.0 },
+      { n: 'Proteína Whey concentrada/aislada (1 cazo = 30g)', cat: 'Grasas/Supl', k: 385, p: 78.0, c: 6.0, f: 5.5 },
+      { n: 'Caseína micelar en polvo (1 cazo = 30g)', cat: 'Grasas/Supl', k: 360, p: 76.0, c: 7.0, f: 3.0 }
+    ];
+
+    // ================= 2. ESTADO Y PERSISTENCIA =================
+    var baseDatosDiaria = JSON.parse(localStorage.getItem('ms_diario_pro_v6')) || JSON.parse(localStorage.getItem('ms_diario_pro_v5')) || {};
+    var favoritosGuardados = JSON.parse(localStorage.getItem('ms_favoritos_v7')) || [
+      { n: 'Manzana fresca (1 ud mediana = 180g)', cat: 'Frutas', k: 52, p: 0.3, c: 13.8, f: 0.2 },
+      { n: 'Pechuga de pollo fresca (plancha/cruda)', cat: 'Carnes', k: 110, p: 23.0, c: 0.0, f: 1.5 },
+      { n: 'Huevo entero talla M/L (1 ud = 60g)', cat: 'Huevos/Lácteos', k: 143, p: 12.6, c: 0.7, f: 9.5 },
+      { n: 'Garbanzos cocidos (bote o hervidos)', cat: 'Legumbres/Cereales', k: 135, p: 7.5, c: 21.0, f: 2.2 },
+      { n: 'Proteína Whey concentrada/aislada (1 cazo = 30g)', cat: 'Grasas/Supl', k: 385, p: 78.0, c: 6.0, f: 5.5 }
+    ];
+    var metasCustom = JSON.parse(localStorage.getItem('ms_metas_custom')) || { k: 2156, p: 167, c: 183, f: 68, autoPeso: true };
+
+    // Guardar y recuperar API Key cómodamente
+    var savedApiKey = localStorage.getItem('ms_gemini_api_key') || '';
+    document.getElementById('apiKeyInput').value = savedApiKey;
+    document.getElementById('apiKeyInput').addEventListener('input', function() {
+      localStorage.setItem('ms_gemini_api_key', this.value.trim());
+    });
+
+    var categoriaActiva = 'Todos';
+    var soloFavoritosActivo = false;
+    var resultadosOnlineExtra = [];
+    var fotoPlatoBase64 = null;
+    var macroBase100g = { p: 0, c: 0, f: 0, k: 0 };
+
+    var hoyStr = new Date().toISOString().split('T')[0];
+    var selectorFecha = document.getElementById('selectorFecha');
+    selectorFecha.value = hoyStr;
+    selectorFecha.addEventListener('change', actualizarVista);
+
+    function obtenerFecha() { return selectorFecha.value || hoyStr; }
+    function asegurarDia(fKey) {
+      if (!baseDatosDiaria[fKey]) baseDatosDiaria[fKey] = { alimentos: [], peso: '', fotoCuerpo: null };
+    }
+
+    function esFavorito(nombre) {
+      return favoritosGuardados.some(function(x) { return x.n.toLowerCase() === nombre.toLowerCase(); });
+    }
+
+    function alternarFavorito(itemObj) {
+      var idx = favoritosGuardados.findIndex(function(x) { return x.n.toLowerCase() === itemObj.n.toLowerCase(); });
+      if (idx >= 0) {
+        favoritosGuardados.splice(idx, 1);
+      } else {
+        favoritosGuardados.unshift({
+          n: itemObj.n,
+          cat: itemObj.cat || 'Favoritos',
+          k: itemObj.k,
+          p: itemObj.p,
+          c: itemObj.c,
+          f: itemObj.f
+        });
+      }
+      localStorage.setItem('ms_favoritos_v7', JSON.stringify(favoritosGuardados));
+      dibujarBaseDatos();
+      actualizarVista();
+    }
+
+    // ================= 3. MODAL DE FOTO A TAMAÑO REAL =================
+    function abrirFotoZoom(src, titulo) {
+      if (!src) return;
+      document.getElementById('imgZoomReal').src = src;
+      document.getElementById('tituloModalFoto').textContent = titulo || 'Foto en Tamaño Real';
+      document.getElementById('modalZoomFoto').className = 'modal-foto';
+    }
+    document.getElementById('btnCerrarModalFoto').addEventListener('click', function() {
+      document.getElementById('modalZoomFoto').className = 'modal-foto hide';
+    });
+
+    // ================= 4. NAVEGACIÓN INFERIOR =================
+    document.getElementById('navDiario').addEventListener('click', function() {
+      document.getElementById('secDiario').className = '';
+      document.getElementById('secEvolucion').className = 'hide';
+      document.getElementById('navDiario').className = 'nav-btn active';
+      document.getElementById('navEvolucion').className = 'nav-btn';
+    });
+
+    document.getElementById('navEvolucion').addEventListener('click', function() {
+      document.getElementById('secDiario').className = 'hide';
+      document.getElementById('secEvolucion').className = '';
+      document.getElementById('navDiario').className = 'nav-btn';
+      document.getElementById('navEvolucion').className = 'nav-btn active';
+      renderizarEvolucion();
+    });
+
+    // ================= 5. METAS DE DEFINICIÓN Y CÁLCULO POR PESO =================
+    function calcularMetasDefinicionPorPeso(pesoKg) {
+      var pVal = parseFloat(pesoKg) || 76.0;
+      var tmb = (10 * pVal) + (6.25 * 176) - (5 * 47) + 5;
+      var kMeta = Math.round((tmb * 1.55) * 0.85); // -15% definición
+      var pMeta = Math.round(pVal * 2.2);
+      var fMeta = Math.round(pVal * 0.9);
+      var cMeta = Math.max(0, Math.round((kMeta - (pMeta * 4) - (fMeta * 9)) / 4));
+      return { k: kMeta, p: pMeta, c: cMeta, f: fMeta };
+    }
+
+    document.getElementById('btnToggleMetas').addEventListener('click', function() {
+      var p = document.getElementById('panelEditarMetas');
+      p.className = p.className === 'hide' ? '' : 'hide';
+    });
+
+    document.getElementById('btnAutoMetasPeso').addEventListener('click', function() {
+      var fKey = obtenerFecha();
+      asegurarDia(fKey);
+      var pesoHoy = parseFloat(baseDatosDiaria[fKey].peso) || 76.0;
+      var calc = calcularMetasDefinicionPorPeso(pesoHoy);
+      metasCustom = { k: calc.k, p: calc.p, c: calc.c, f: calc.f, autoPeso: true };
+      localStorage.setItem('ms_metas_custom', JSON.stringify(metasCustom));
+      document.getElementById('editMetaKcal').value = metasCustom.k;
+      document.getElementById('editMetaProt').value = metasCustom.p;
+      document.getElementById('editMetaCarb').value = metasCustom.c;
+      document.getElementById('editMetaGrasa').value = metasCustom.f;
+      actualizarVista();
+    });
+
+    document.getElementById('btnGuardarMetas').addEventListener('click', function() {
+      metasCustom = {
+        k: parseInt(document.getElementById('editMetaKcal').value) || 2156,
+        p: parseInt(document.getElementById('editMetaProt').value) || 167,
+        c: parseInt(document.getElementById('editMetaCarb').value) || 183,
+        f: parseInt(document.getElementById('editMetaGrasa').value) || 68,
+        autoPeso: false
+      };
+      localStorage.setItem('ms_metas_custom', JSON.stringify(metasCustom));
+      document.getElementById('panelEditarMetas').className = 'hide';
+      actualizarVista();
+    });
+
+    // ================= 6. PESO Y FOTO CORPORAL DEL DÍA =================
+    document.getElementById('inputPesoDia').addEventListener('input', function() {
+      var fKey = obtenerFecha();
+      asegurarDia(fKey);
+      baseDatosDiaria[fKey].peso = this.value;
+      if (metasCustom.autoPeso && parseFloat(this.value) > 35) {
+        var c = calcularMetasDefinicionPorPeso(this.value);
+        metasCustom.k = c.k; metasCustom.p = c.p; metasCustom.c = c.c; metasCustom.f = c.f;
+      }
+      guardarYActualizar();
+    });
+
+    document.getElementById('btnSubirFotoDia').addEventListener('click', function() {
+      document.getElementById('inputFotoDia').click();
+    });
+
+    document.getElementById('inputFotoDia').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      comprimirImagen(file, 650, function(b64) {
+        var fKey = obtenerFecha();
+        asegurarDia(fKey);
+        baseDatosDiaria[fKey].fotoCuerpo = b64;
+        guardarYActualizar();
+      });
+    });
+
+    document.getElementById('btnBorrarFotoHoy').addEventListener('click', function() {
+      var fKey = obtenerFecha();
+      asegurarDia(fKey);
+      baseDatosDiaria[fKey].fotoCuerpo = null;
+      guardarYActualizar();
+    });
+
+    function comprimirImagen(file, maxW, cb) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var w = img.width, h = img.height;
+          if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          cb(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ================= 7. BASE DE DATOS + CATEGORÍAS + FAVORITOS =================
+    var chips = document.querySelectorAll('.chip-cat');
+    for (var cIdx = 0; cIdx < chips.length; cIdx++) {
+      chips[cIdx].addEventListener('click', function() {
+        for (var k = 0; k < chips.length; k++) chips[k].className = 'chip-cat';
+        this.className = 'chip-cat active';
+        categoriaActiva = this.getAttribute('data-cat');
+        dibujarBaseDatos();
+      });
+    }
+
+    document.getElementById('btnFiltroFav').addEventListener('click', function() {
+      soloFavoritosActivo = !soloFavoritosActivo;
+      this.className = soloFavoritosActivo ? 'btn btn-outline active' : 'btn btn-outline';
+      this.textContent = soloFavoritosActivo ? '⭐ Viendo Favoritos (Ver todos)' : '⭐ Solo Favoritos';
+      dibujarBaseDatos();
+    });
+
+    function obtenerListaFiltradaBd() {
+      var q = document.getElementById('inputBuscarBd').value.toLowerCase().trim();
+      var fuente = soloFavoritosActivo ? favoritosGuardados : BASE_ALIMENTOS_INICIAL.concat(resultadosOnlineExtra);
+
+      return fuente.filter(function(item) {
+        var coincideTexto = !q || item.n.toLowerCase().indexOf(q) !== -1;
+        var coincideCat = soloFavoritosActivo || categoriaActiva === 'Todos' || item.cat === categoriaActiva;
+        return coincideTexto && coincideCat;
+      });
+    }
+
+    function dibujarBaseDatos() {
+      var gramos = parseFloat(document.getElementById('inputGramosBd').value) || 100;
+      var ratio = gramos / 100;
+      var lista = obtenerListaFiltradaBd();
+      var caja = document.getElementById('listaBd');
+      caja.innerHTML = '';
+
+      if (lista.length === 0) {
+        caja.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:10px 0;">No hay alimentos en este filtro. Pulsa el botón amarillo para buscar online.</div>';
+        return;
+      }
+
+      for (var i = 0; i < lista.length; i++) {
+        (function(item) {
+          var kCalc = Math.round(item.k * ratio);
+          var pCalc = Number((item.p * ratio).toFixed(1));
+          var cCalc = Number((item.c * ratio).toFixed(1));
+          var fCalc = Number((item.f * ratio).toFixed(1));
+          var fav = esFavorito(item.n);
+
+          var div = document.createElement('div');
+          div.className = 'item';
+
+          var izq = document.createElement('div');
+          izq.style.display = 'flex';
+          izq.style.alignItems = 'center';
+          izq.style.gap = '6px';
+
+          var btnStar = document.createElement('button');
+          btnStar.type = 'button';
+          btnStar.className = 'btn-star';
+          btnStar.style.color = fav ? '#f59e0b' : '#cbd5e1';
+          btnStar.textContent = fav ? '★' : '☆';
+          btnStar.title = 'Guardar/Quitar de Favoritos';
+          btnStar.addEventListener('click', function() {
+            alternarFavorito(item);
+          });
+
+          var info = document.createElement('div');
+          info.innerHTML = '<b>' + item.n + '</b> <span style="color:var(--muted); font-size:11px;">(' + gramos + 'g)</span><br>' +
+                           '<span style="color:var(--green); font-weight:700;">' + kCalc + ' kcal</span> · ' +
+                           '<span style="font-size:11px; color:var(--muted);">P:' + pCalc + 'g C:' + cCalc + 'g G:' + fCalc + 'g</span>';
+
+          izq.appendChild(btnStar);
+          izq.appendChild(info);
+
+          var btnAdd = document.createElement('button');
+          btnAdd.type = 'button';
+          btnAdd.className = 'btn';
+          btnAdd.style.width = 'auto';
+          btnAdd.style.padding = '7px 12px';
+          btnAdd.style.marginTop = '0';
+          btnAdd.style.fontSize = '12px';
+          btnAdd.textContent = '+ Añadir';
+          btnAdd.addEventListener('click', function() {
+            var fKey = obtenerFecha();
+            asegurarDia(fKey);
+            baseDatosDiaria[fKey].alimentos.unshift({
+              id: 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+              nombre: item.n + ' (' + gramos + 'g)',
+              nombreBase: item.n,
+              kcal: kCalc, p: pCalc, c: cCalc, f: fCalc,
+              k100: item.k, p100: item.p, c100: item.c, f100: item.f,
+              foto: null
+            });
+            guardarYActualizar();
+          });
+
+          div.appendChild(izq);
+          div.appendChild(btnAdd);
+          caja.appendChild(div);
+        })(lista[i]);
+      }
+    }
+
+    document.getElementById('inputGramosBd').addEventListener('input', dibujarBaseDatos);
+    document.getElementById('inputBuscarBd').addEventListener('input', dibujarBaseDatos);
+
+    document.getElementById('btnOnlineBd').addEventListener('click', function() {
+      var q = document.getElementById('inputBuscarBd').value.trim();
+      var msg = document.getElementById('msgBd');
+      if (!q) return alert('Escribe primero el alimento o marca que deseas buscar.');
+
+      msg.textContent = '⏳ Buscando "' + q + '" en Open Food Facts...';
+      fetch('https://es.openfoodfacts.org/cgi/search.pl?search_terms=' + encodeURIComponent(q) + '&search_simple=1&action=process&json=1&page_size=15')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var prods = data.products || [];
+          var nuevos = [];
+          for (var i = 0; i < prods.length; i++) {
+            var pr = prods[i];
+            if (pr.product_name && pr.nutriments) {
+              var nu = pr.nutriments;
+              var p100 = parseFloat(nu.proteins_100g) || 0;
+              var c100 = parseFloat(nu.carbohydrates_100g) || 0;
+              var f100 = parseFloat(nu.fat_100g) || 0;
+              var k100 = parseFloat(nu['energy-kcal_100g']) || Math.round(p100*4 + c100*4 + f100*9);
+              var marca = pr.brands ? ' (' + pr.brands.split(',')[0] + ')' : '';
+              nuevos.push({ n: pr.product_name + marca, cat: 'Todos', k: Math.round(k100), p: Number(p100.toFixed(1)), c: Number(c100.toFixed(1)), f: Number(f100.toFixed(1)) });
+            }
+          }
+          if (nuevos.length > 0) {
+            resultadosOnlineExtra = nuevos.concat(resultadosOnlineExtra);
+            soloFavoritosActivo = false;
+            categoriaActiva = 'Todos';
+            msg.textContent = '✅ ' + nuevos.length + ' productos encontrados online (puedes marcarlos con ★ para guardarlos en favoritos):';
+            dibujarBaseDatos();
+          } else {
+            msg.textContent = '⚠️ No se encontraron productos con ese nombre.';
+          }
+        }).catch(function() { msg.textContent = '⚠️ Sin conexión externa en este momento. Mostrando base interna.'; });
+    });
+
+    // ================= 8. ANALIZAR PLATO POR IA (POR TEXTO Y/O FOTO) =================
+    document.getElementById('btnCamara').addEventListener('click', function() { document.getElementById('inputCamara').click(); });
+    document.getElementById('btnGaleria').addEventListener('click', function() { document.getElementById('inputGaleria').click(); });
+
+    function procesarArchivoFoto(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      comprimirImagen(file, 500, function(b64) {
+        fotoPlatoBase64 = b64;
+        var img = document.getElementById('previewFotoPlato');
+        img.src = fotoPlatoBase64;
+        document.getElementById('boxPreviewPlato').className = '';
+      });
+    }
+    document.getElementById('inputCamara').addEventListener('change', procesarArchivoFoto);
+    document.getElementById('inputGaleria').addEventListener('change', procesarArchivoFoto);
+
+    document.getElementById('btnQuitarFotoPlato').addEventListener('click', function() {
+      fotoPlatoBase64 = null;
+      document.getElementById('inputCamara').value = '';
+      document.getElementById('inputGaleria').value = '';
+      document.getElementById('boxPreviewPlato').className = 'hide';
+    });
+
+    document.getElementById('btnAnalizar').addEventListener('click', async function() {
+      var desc = document.getElementById('descripcionIaInput').value.trim();
+      var apiKey = document.getElementById('apiKeyInput').value.trim();
+      var estadoMsg = document.getElementById('estadoAnalisisIa');
+
+      if (!desc && !fotoPlatoBase64) {
+        return alert('Por favor, escribe el nombre/descripción del plato o añade una foto para analizarlo.');
+      }
+
+      document.getElementById('resNombre').value = 'Analizando con IA...';
+      estadoMsg.textContent = '⏳ Calculando peso estimado y macronutrientes...';
+
+      // 1. Si hay API Key de Gemini: soporta Texto solo, Foto sola, o Foto + Texto
+      if (apiKey) {
+        try {
+          var parts = [];
+          var promptTexto = 'Eres un nutricionista experto. Analiza el siguiente plato o alimento' +
+            (desc ? ' descrito como: "' + desc + '"' : ' de la imagen') +
+            '. Estima de forma realista el peso total de la ración completa en gramos (si el usuario indica gramos o unidades en la descripción, respétalos exactamente) y calcula sus valores nutricionales por cada 100g del plato total. Devuelve ÚNICAMENTE un objeto JSON válido sin markdown: {"name": "nombre claro en español", "peso_estimado_g": numero_entero, "kcal_100g": numero, "p_100g": numero, "c_100g": numero, "f_100g": numero}';
+
+          parts.push({ text: promptTexto });
+
+          if (fotoPlatoBase64) {
+            var base64Data = fotoPlatoBase64.split(',')[1];
+            parts.push({ inline_data: { mime_type: 'image/jpeg', data: base64Data } });
+          }
+
+          var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: parts }] })
+          });
+
+          var data = await res.json();
+          var textoRespuesta = data.candidates[0].content.parts[0].text;
+          var match = textoRespuesta.match(/\{[\s\S]*\}/);
+          if (match) {
+            var parsed = JSON.parse(match[0]);
+            document.getElementById('resNombre').value = parsed.name || desc || 'Plato analizado por IA';
+            macroBase100g = {
+              p: parseFloat(parsed.p_100g) || 12,
+              c: parseFloat(parsed.c_100g) || 18,
+              f: parseFloat(parsed.f_100g) || 6,
+              k: parseFloat(parsed.kcal_100g) || 174
+            };
+            document.getElementById('resPesoGramos').value = parseInt(parsed.peso_estimado_g) || 250;
+            recalcularMacroProporcional();
+            estadoMsg.textContent = '✅ Análisis completado con Gemini IA (puedes ajustar el peso si lo deseas).';
+            return;
+          }
+        } catch (err) {
+          estadoMsg.textContent = '⚠️ Aviso API: usando estimador inteligente local.';
+        }
+      }
+
+      // 2. Estimador inteligente local (por si no hay API Key o sin conexión)
+      setTimeout(function() {
+        var textoMin = (desc || 'Plato variado').toLowerCase();
+        var p100 = 14, c100 = 18, f100 = 6, pesoEst = 250;
+
+        // Detectar si el usuario puso gramos explícitos en el texto (ej. "300g")
+        var matchGramos = textoMin.match(/(\d+)\s*(g|gr|gramos)/);
+
+        if (textoMin.indexOf('garbanzo') !== -1 && textoMin.indexOf('huevo') !== -1) {
+          p100 = 10.5; c100 = 14.0; f100 = 6.5; pesoEst = 320;
+        } else if (textoMin.indexOf('pollo') !== -1 && textoMin.indexOf('arroz') !== -1) {
+          p100 = 14.0; c100 = 16.0; f100 = 2.5; pesoEst = 300;
+        } else if (textoMin.indexOf('pollo') !== -1 || textoMin.indexOf('pavo') !== -1) {
+          p100 = 23.0; c100 = 0.5; f100 = 2.0; pesoEst = 200;
+        } else if (textoMin.indexOf('salmon') !== -1 || textoMin.indexOf('salmón') !== -1) {
+          p100 = 20.0; c100 = 0.0; f100 = 13.0; pesoEst = 180;
+        } else if (textoMin.indexOf('boqueron') !== -1 || textoMin.indexOf('anchoa') !== -1 || textoMin.indexOf('pescado') !== -1 || textoMin.indexOf('merluza') !== -1) {
+          p100 = 19.0; c100 = 0.5; f100 = 3.5; pesoEst = 200;
+        } else if (textoMin.indexOf('huevo') !== -1 || textoMin.indexOf('tortilla') !== -1) {
+          p100 = 12.5; c100 = 1.5; f100 = 10.0; pesoEst = 150;
+        } else if (textoMin.indexOf('lenteja') !== -1 || textoMin.indexOf('cocido') !== -1 || textoMin.indexOf('guiso') !== -1) {
+          p100 = 9.0; c100 = 17.0; f100 = 4.5; pesoEst = 320;
+        } else if (textoMin.indexOf('ensalada') !== -1 || textoMin.indexOf('verdura') !== -1 || textoMin.indexOf('espinaca') !== -1) {
+          p100 = 3.5; c100 = 5.0; f100 = 4.0; pesoEst = 220;
+        } else if (textoMin.indexOf('pasta') !== -1 || textoMin.indexOf('macarron') !== -1 || textoMin.indexOf('espagueti') !== -1) {
+          p100 = 7.5; c100 = 25.0; f100 = 5.0; pesoEst = 280;
+        } else if (textoMin.indexOf('bocadillo') !== -1 || textoMin.indexOf('sandwich') !== -1 || textoMin.indexOf('tostada') !== -1) {
+          p100 = 13.0; c100 = 34.0; f100 = 7.5; pesoEst = 160;
+        } else if (textoMin.indexOf('batido') !== -1 || textoMin.indexOf('whey') !== -1 || textoMin.indexOf('proteina') !== -1) {
+          p100 = 75.0; c100 = 6.0; f100 = 5.0; pesoEst = 35;
+        } else if (textoMin.indexOf('manzana') !== -1 || textoMin.indexOf('fruta') !== -1 || textoMin.indexOf('naranja') !== -1) {
+          p100 = 0.6; c100 = 13.0; f100 = 0.2; pesoEst = 180;
+        }
+
+        if (matchGramos && parseInt(matchGramos[1]) > 0) {
+          pesoEst = parseInt(matchGramos[1]);
+        }
+
+        var k100 = Math.round((p100 * 4) + (c100 * 4) + (f100 * 9));
+        document.getElementById('resNombre').value = desc || 'Plato analizado por IA';
+        macroBase100g = { p: p100, c: c100, f: f100, k: k100 };
+        document.getElementById('resPesoGramos').value = pesoEst;
+        recalcularMacroProporcional();
+        estadoMsg.textContent = '✅ Estimación lista (puedes ajustar el peso y se recalcularán los macros).';
+      }, 300);
+    });
+
+    function recalcularMacroProporcional() {
+      var gramos = parseFloat(document.getElementById('resPesoGramos').value) || 100;
+      var ratio = gramos / 100;
+      if (macroBase100g.k > 0) {
+        document.getElementById('resP').value = Number((macroBase100g.p * ratio).toFixed(1));
+        document.getElementById('resC').value = Number((macroBase100g.c * ratio).toFixed(1));
+        document.getElementById('resF').value = Number((macroBase100g.f * ratio).toFixed(1));
+        document.getElementById('resKcal').value = Math.round(macroBase100g.k * ratio);
+      }
+    }
+
+    document.getElementById('btnFavDesdeFoto').addEventListener('click', function() {
+      var nombre = document.getElementById('resNombre').value.trim();
+      var gramos = parseFloat(document.getElementById('resPesoGramos').value) || 100;
+      var ratio = 100 / gramos;
+      var kcal = parseFloat(document.getElementById('resKcal').value) || 0;
+      var p = parseFloat(document.getElementById('resP').value) || 0;
+      var c = parseFloat(document.getElementById('resC').value) || 0;
+      var f = parseFloat(document.getElementById('resF').value) || 0;
+
+      if (!nombre) return alert('Escribe o analiza un alimento primero.');
+      alternarFavorito({
+        n: nombre,
+        cat: 'Favoritos',
+        k: Math.round(kcal * ratio),
+        p: Number((p * ratio).toFixed(1)),
+        c: Number((c * ratio).toFixed(1)),
+        f: Number((f * ratio).toFixed(1))
+      });
+      alert('⭐ Guardado en tu lista de Favoritos.');
+    });
+
+    document.getElementById('btnGuardarFoto').addEventListener('click', function() {
+      var nombre = document.getElementById('resNombre').value.trim();
+      var gramos = document.getElementById('resPesoGramos').value || 100;
+      var kcal = parseInt(document.getElementById('resKcal').value) || 0;
+      var p = parseFloat(document.getElementById('resP').value) || 0;
+      var c = parseFloat(document.getElementById('resC').value) || 0;
+      var f = parseFloat(document.getElementById('resF').value) || 0;
+
+      if (!nombre || nombre === 'Analizando con IA...') return alert('Analiza o escribe un alimento primero.');
+
+      var fKey = obtenerFecha();
+      asegurarDia(fKey);
+      baseDatosDiaria[fKey].alimentos.unshift({
+        id: 'id_' + Date.now(),
+        nombre: nombre + ' (' + gramos + 'g)',
+        nombreBase: nombre,
+        kcal: kcal, p: p, c: c, f: f,
+        foto: fotoPlatoBase64
+      });
+
+      guardarYActualizar();
+      fotoPlatoBase64 = null;
+      document.getElementById('boxPreviewPlato').className = 'hide';
+      document.getElementById('resNombre').value = '';
+      document.getElementById('descripcionIaInput').value = '';
+      document.getElementById('estadoAnalisisIa').textContent = '';
+      macroBase100g = { p: 0, c: 0, f: 0, k: 0 };
+      document.getElementById('resP').value = 0;
+      document.getElementById('resC').value = 0;
+      document.getElementById('resF').value = 0;
+      document.getElementById('resKcal').value = 0;
+    });
+
+    // ================= 9. EXPORTAR DIARIO =================
+    document.getElementById('btnExportar').addEventListener('click', function() {
+      var fKey = obtenerFecha();
+      var diaObj = baseDatosDiaria[fKey];
+      if (!diaObj || diaObj.alimentos.length === 0) {
+        alert('No hay alimentos registrados en la fecha ' + fKey);
+        return;
+      }
+
+      var sk = 0, sp = 0, sc = 0, sf = 0;
+      var texto = '========================================\n';
+      texto += ' ENTRADA DE DIARIO - FECHA: ' + fKey + '\n';
+      texto += '========================================\n\n';
+      if (diaObj.peso) texto += '⚖️ Peso corporal: ' + diaObj.peso + ' kg\n\n';
+      texto += '📋 ALIMENTOS REGISTRADOS:\n';
+
+      for (var i = 0; i < diaObj.alimentos.length; i++) {
+        var it = diaObj.alimentos[i];
+        sk += it.kcal; sp += it.p; sc += it.c; sf += it.f;
+        texto += '• ' + it.nombre + '\n  ' + Math.round(it.kcal) + ' kcal | Prot: ' + it.p + 'g | Carbs: ' + it.c + 'g | Grasas: ' + it.f + 'g\n\n';
+      }
+      texto += '----------------------------------------\n';
+      texto += '📊 TOTALES DEL DÍA vs OBJETIVO:\n';
+      texto += '• Calorías: ' + Math.round(sk) + ' / ' + metasCustom.k + ' kcal\n';
+      texto += '• Proteínas: ' + Math.round(sp) + ' / ' + metasCustom.p + ' g\n';
+      texto += '• Carbohidratos: ' + Math.round(sc) + ' / ' + metasCustom.c + ' g\n';
+      texto += '• Grasas: ' + Math.round(sf) + ' / ' + metasCustom.f + ' g\n';
+      texto += '========================================\n';
+
+      var blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Diario_Nutricion_' + fKey + '.txt';
+      a.click();
+    });
+
+    function guardarYActualizar() {
+      localStorage.setItem('ms_diario_pro_v6', JSON.stringify(baseDatosDiaria));
+      actualizarVista();
+    }
+
+    // ================= 10. ACTUALIZAR VISTA DIARIA =================
+    function actualizarVista() {
+      var fKey = obtenerFecha();
+      asegurarDia(fKey);
+      var diaObj = baseDatosDiaria[fKey];
+
+      document.getElementById('inputPesoDia').value = diaObj.peso || '';
+
+      // Mostrar miniatura de foto corporal del día con zoom
+      var boxFotoHoy = document.getElementById('boxFotoCuerpoHoy');
+      if (diaObj.fotoCuerpo) {
+        boxFotoHoy.className = '';
+        var thumbHoy = document.getElementById('thumbCuerpoHoy');
+        thumbHoy.src = diaObj.fotoCuerpo;
+        thumbHoy.onclick = function() {
+          abrirFotoZoom(diaObj.fotoCuerpo, 'Foto Corporal - ' + fKey + (diaObj.peso ? ' (' + diaObj.peso + ' kg)' : ''));
+        };
+      } else {
+        boxFotoHoy.className = 'hide';
+      }
+
+      var lista = diaObj.alimentos;
+      var sk = 0, sp = 0, sc = 0, sf = 0;
+      for (var i = 0; i < lista.length; i++) {
+        sk += lista[i].kcal;
+        sp += lista[i].p;
+        sc += lista[i].c;
+        sf += lista[i].f;
+      }
+
+      document.getElementById('txtKcalConsumidas').textContent = Math.round(sk);
+      document.getElementById('txtKcalMeta').textContent = metasCustom.k;
+      var restKcal = metasCustom.k - Math.round(sk);
+      var badge = document.getElementById('txtKcalRestantes');
+      if (restKcal >= 0) {
+        badge.textContent = 'Restan ' + restKcal + ' kcal';
+        badge.style.background = 'var(--green-light)';
+        badge.style.color = 'var(--green)';
+      } else {
+        badge.textContent = '+' + Math.abs(restKcal) + ' kcal sobre meta';
+        badge.style.background = 'var(--rose-light)';
+        badge.style.color = 'var(--rose)';
+      }
+      document.getElementById('barKcal').style.width = Math.min(100, (sk / metasCustom.k) * 100) + '%';
+
+      document.getElementById('txtProtConsumidas').textContent = Math.round(sp);
+      document.getElementById('txtProtMeta').textContent = metasCustom.p;
+      var pPct = Math.round((sp / metasCustom.p) * 100);
+      document.getElementById('pctProt').textContent = pPct + '% de la meta';
+      document.getElementById('barProt').style.width = Math.min(100, pPct) + '%';
+
+      document.getElementById('txtCarbConsumidos').textContent = Math.round(sc);
+      document.getElementById('txtCarbMeta').textContent = metasCustom.c;
+      var cPct = Math.round((sc / metasCustom.c) * 100);
+      document.getElementById('pctCarb').textContent = cPct + '% de la meta';
+      document.getElementById('barCarb').style.width = Math.min(100, cPct) + '%';
+
+      document.getElementById('txtGrasaConsumidas').textContent = Math.round(sf);
+      document.getElementById('txtGrasaMeta').textContent = metasCustom.f;
+      var fPct = Math.round((sf / metasCustom.f) * 100);
+      document.getElementById('pctGrasa').textContent = fPct + '% de la meta';
+      document.getElementById('barGrasa').style.width = Math.min(100, fPct) + '%';
+
+      var caja = document.getElementById('listaGuardados');
+      document.getElementById('numGuardados').textContent = lista.length;
+      caja.innerHTML = '';
+
+      if (lista.length === 0) {
+        caja.innerHTML = '<div style="font-size:12px; color:var(--muted); padding:8px 0;">Aún no has registrado alimentos en esta fecha.</div>';
+        return;
+      }
+
+      for (var j = 0; j < lista.length; j++) {
+        (function(idx) {
+          var item = lista[idx];
+          var div = document.createElement('div');
+          div.className = 'item';
+
+          var izq = document.createElement('div');
+          izq.style.display = 'flex';
+          izq.style.alignItems = 'center';
+          izq.style.gap = '8px';
+
+          if (item.foto) {
+            var im = document.createElement('img');
+            im.src = item.foto;
+            im.className = 'thumb';
+            im.onclick = function() { abrirFotoZoom(item.foto, item.nombre); };
+            izq.appendChild(im);
+          }
+
+          var txt = document.createElement('div');
+          txt.innerHTML = '<b>' + item.nombre + '</b><br><span style="color:var(--green); font-weight:700;">' + Math.round(item.kcal) + ' kcal</span> <span style="color:var(--muted); font-size:11px;">(P:' + item.p + 'g C:' + item.c + 'g G:' + item.f + 'g)</span>';
+          izq.appendChild(txt);
+
+          var btnDel = document.createElement('button');
+          btnDel.type = 'button';
+          btnDel.className = 'btn btn-red';
+          btnDel.textContent = '✕';
+          btnDel.addEventListener('click', function() {
+            baseDatosDiaria[fKey].alimentos.splice(idx, 1);
+            guardarYActualizar();
+          });
+
+          div.appendChild(izq);
+          div.appendChild(btnDel);
+          caja.appendChild(div);
+        })(j);
+      }
+    }
+
+    // ================= 11. GENERADOR DE GRÁFICAS SVG CON ESCALA Y REFERENCIA OBJETIVO =================
+    function crearGraficaBarrasConMeta(contenedorId, datos, metaValor, colorBarra, unidad) {
+      var cont = document.getElementById(contenedorId);
+      if (datos.length === 0) {
+        cont.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:16px;">Sin registros en este rango de fechas</div>';
+        return;
+      }
+
+      var maxVal = metaValor * 1.25;
+      for (var i = 0; i < datos.length; i++) {
+        if (datos[i].valor > maxVal) maxVal = datos[i].valor * 1.15;
+      }
+      if (maxVal <= 0) maxVal = 100;
+
+      var W = 460, H = 165, padL = 38, padR = 14, padT = 22, padB = 28;
+      var plotW = W - padL - padR;
+      var plotH = H - padT - padB;
+
+      var yMeta = padT + plotH - ((metaValor / maxVal) * plotH);
+      var stepW = plotW / datos.length;
+      var barW = Math.min(34, Math.max(10, stepW * 0.62));
+
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%; height:auto; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">';
+
+      var niveles = [0, 0.5, 1];
+      for (var n = 0; n < niveles.length; n++) {
+        var frac = niveles[n];
+        var yLine = padT + plotH - (frac * plotH);
+        var valEscala = Math.round(frac * maxVal);
+        svg += '<line x1="' + padL + '" y1="' + yLine + '" x2="' + (W - padR) + '" y2="' + yLine + '" stroke="#e2e8f0" stroke-width="1"/>';
+        svg += '<text x="' + (padL - 5) + '" y="' + (yLine + 3) + '" text-anchor="end" fill="#64748b" font-size="9">' + valEscala + '</text>';
+      }
+
+      for (var j = 0; j < datos.length; j++) {
+        var d = datos[j];
+        var hBar = Math.max(2, (d.valor / maxVal) * plotH);
+        var xBar = padL + (j * stepW) + (stepW - barW) / 2;
+        var yBar = padT + plotH - hBar;
+        var fechaCorta = d.fecha.slice(5);
+
+        svg += '<rect x="' + xBar + '" y="' + yBar + '" width="' + barW + '" height="' + hBar + '" rx="4" fill="' + colorBarra + '" opacity="0.9"/>';
+        svg += '<text x="' + (xBar + barW / 2) + '" y="' + (yBar - 4) + '" text-anchor="middle" fill="#0f172a" font-size="9" font-weight="bold">' + Math.round(d.valor) + '</text>';
+        svg += '<text x="' + (xBar + barW / 2) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#64748b" font-size="9">' + fechaCorta + '</text>';
+      }
+
+      svg += '<line x1="' + padL + '" y1="' + yMeta + '" x2="' + (W - padR) + '" y2="' + yMeta + '" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="4,3"/>';
+      svg += '<rect x="' + (W - padR - 86) + '" y="' + (yMeta - 14) + '" width="84" height="13" rx="3" fill="#0f172a"/>';
+      svg += '<text x="' + (W - padR - 44) + '" y="' + (yMeta - 5) + '" text-anchor="middle" fill="#ffffff" font-size="8" font-weight="bold">Meta: ' + metaValor + ' ' + unidad + '</text>';
+
+      svg += '</svg>';
+      cont.innerHTML = svg;
+    }
+
+    function crearGraficaLineaPeso(contenedorId, datosPeso) {
+      var cont = document.getElementById(contenedorId);
+      if (datosPeso.length === 0) {
+        cont.innerHTML = '<div style="font-size:12px; color:var(--muted); text-align:center; padding:16px;">Registra tu peso en el diario para ver la curva de evolución</div>';
+        return;
+      }
+
+      var pesos = datosPeso.map(function(d) { return d.valor; });
+      var minP = Math.min.apply(null, pesos) - 1.0;
+      var maxP = Math.max.apply(null, pesos) + 1.0;
+
+      var W = 460, H = 160, padL = 38, padR = 18, padT = 24, padB = 28;
+      var plotW = W - padL - padR;
+      var plotH = H - padT - padB;
+
+      var puntos = [];
+      for (var i = 0; i < datosPeso.length; i++) {
+        var x = datosPeso.length === 1 ? (padL + plotW / 2) : (padL + (i * plotW / (datosPeso.length - 1)));
+        var y = padT + plotH - (((datosPeso[i].valor - minP) / (maxP - minP || 1)) * plotH);
+        puntos.push({ x: x, y: y, valor: datosPeso[i].valor, fecha: datosPeso[i].fecha.slice(5) });
+      }
+
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%; height:auto; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">';
+      svg += '<text x="' + (padL - 5) + '" y="' + (padT + 4) + '" text-anchor="end" fill="#64748b" font-size="9">' + maxP.toFixed(1) + '</text>';
+      svg += '<text x="' + (padL - 5) + '" y="' + (padT + plotH) + '" text-anchor="end" fill="#64748b" font-size="9">' + minP.toFixed(1) + '</text>';
+
+      var poly = puntos.map(function(pt) { return pt.x + ',' + pt.y; }).join(' ');
+      svg += '<polyline fill="none" stroke="#4f46e5" stroke-width="2.5" points="' + poly + '"/>';
+
+      for (var j = 0; j < puntos.length; j++) {
+        var p = puntos[j];
+        svg += '<circle cx="' + p.x + '" cy="' + p.y + '" r="4.5" fill="#4f46e5" stroke="#fff" stroke-width="1.5"/>';
+        svg += '<text x="' + p.x + '" y="' + (p.y - 8) + '" text-anchor="middle" fill="#0f172a" font-size="9.5" font-weight="bold">' + p.valor.toFixed(1) + 'kg</text>';
+        svg += '<text x="' + p.x + '" y="' + (H - 8) + '" text-anchor="middle" fill="#64748b" font-size="9">' + p.fecha + '</text>';
+      }
+      svg += '</svg>';
+      cont.innerHTML = svg;
+    }
+
+    // ================= 12. RENDERIZAR PESTAÑA DE EVOLUCIÓN E HISTÓRICO =================
+    document.getElementById('btnFiltrarEvolucion').addEventListener('click', renderizarEvolucion);
+
+    function renderizarEvolucion() {
+      var fDesde = document.getElementById('filtroFechaDesde').value;
+      var fHasta = document.getElementById('filtroFechaHasta').value;
+
+      var todasFechas = Object.keys(baseDatosDiaria).filter(function(f) {
+        var d = baseDatosDiaria[f];
+        return d && (d.alimentos.length > 0 || d.peso || d.fotoCuerpo);
+      }).sort();
+
+      if (fDesde) todasFechas = todasFechas.filter(function(f) { return f >= fDesde; });
+      if (fHasta) todasFechas = todasFechas.filter(function(f) { return f <= fHasta; });
+
+      var ultimasGrafica = todasFechas.slice(-10);
+      var serieKcal = [], serieProt = [], serieCarb = [], serieGrasa = [], seriePeso = [];
+
+      var totK = 0, totP = 0, totC = 0, totF = 0, contDias = todasFechas.length, sumaPeso = 0, contPeso = 0;
+
+      for (var i = 0; i < todasFechas.length; i++) {
+        var fKey = todasFechas[i];
+        var dObj = baseDatosDiaria[fKey];
+        var sk = 0, sp = 0, sc = 0, sf = 0;
+        for (var z = 0; z < dObj.alimentos.length; z++) {
+          sk += dObj.alimentos[z].kcal;
+          sp += dObj.alimentos[z].p;
+          sc += dObj.alimentos[z].c;
+          sf += dObj.alimentos[z].f;
+        }
+        totK += sk; totP += sp; totC += sc; totF += sf;
+        if (dObj.peso) {
+          sumaPeso += parseFloat(dObj.peso);
+          contPeso++;
+        }
+      }
+
+      for (var g = 0; g < ultimasGrafica.length; g++) {
+        var fg = ultimasGrafica[g];
+        var dg = baseDatosDiaria[fg];
+        var kDia = 0, pDia = 0, cDia = 0, fDia = 0;
+        for (var m = 0; m < dg.alimentos.length; m++) {
+          kDia += dg.alimentos[m].kcal;
+          pDia += dg.alimentos[m].p;
+          cDia += dg.alimentos[m].c;
+          fDia += dg.alimentos[m].f;
+        }
+        serieKcal.push({ fecha: fg, valor: kDia });
+        serieProt.push({ fecha: fg, valor: pDia });
+        serieCarb.push({ fecha: fg, valor: cDia });
+        serieGrasa.push({ fecha: fg, valor: fDia });
+        if (dg.peso && parseFloat(dg.peso) > 0) {
+          seriePeso.push({ fecha: fg, valor: parseFloat(dg.peso) });
+        }
+      }
+
+      crearGraficaBarrasConMeta('svgChartKcal', serieKcal, metasCustom.k, '#10b981', 'kcal');
+      crearGraficaBarrasConMeta('svgChartProt', serieProt, metasCustom.p, '#2563eb', 'g');
+      crearGraficaBarrasConMeta('svgChartCarb', serieCarb, metasCustom.c, '#f59e0b', 'g');
+      crearGraficaBarrasConMeta('svgChartGrasa', serieGrasa, metasCustom.f, '#e11d48', 'g');
+      crearGraficaLineaPeso('svgChartPeso', seriePeso);
+
+      var globalBox = document.getElementById('resumenGlobalBox');
+      if (contDias === 0) {
+        globalBox.innerHTML = 'Aún no hay días con datos registrados.';
+      } else {
+        globalBox.innerHTML = '<b>Resumen del periodo (' + contDias + ' días):</b><br>' +
+          '• Media diaria: <b>' + Math.round(totK / contDias) + ' kcal</b> (Prot: ' + Math.round(totP / contDias) + 'g · Carbs: ' + Math.round(totC / contDias) + 'g · Grasas: ' + Math.round(totF / contDias) + 'g)<br>' +
+          '• Peso medio registrado: <b>' + (contPeso > 0 ? (sumaPeso / contPeso).toFixed(1) + ' kg' : 'Sin pesajes') + '</b>';
+      }
+
+      var cont = document.getElementById('contenedorEvolucion');
+      cont.innerHTML = '';
+      var fechasDesc = todasFechas.slice().reverse();
+
+      for (var y = 0; y < fechasDesc.length; y++) {
+        (function(fDiaKey) {
+          var dObj = baseDatosDiaria[fDiaKey];
+          var sk = 0, sp = 0, sc = 0, sf = 0;
+          for (var z = 0; z < dObj.alimentos.length; z++) {
+            sk += dObj.alimentos[z].kcal;
+            sp += dObj.alimentos[z].p;
+            sc += dObj.alimentos[z].c;
+            sf += dObj.alimentos[z].f;
+          }
+
+          var cardDia = document.createElement('div');
+          cardDia.style.background = '#f8fafc';
+          cardDia.style.border = '1px solid #cbd5e1';
+          cardDia.style.borderRadius = '12px';
+          cardDia.style.padding = '12px';
+          cardDia.style.marginBottom = '12px';
+
+          var header = document.createElement('div');
+          header.style.display = 'flex';
+          header.style.justifyContent = 'space-between';
+          header.style.fontWeight = 'bold';
+          header.style.fontSize = '14px';
+          header.style.borderBottom = '1px solid #e2e8f0';
+          header.style.paddingBottom = '6px';
+          header.style.marginBottom = '8px';
+          header.innerHTML = '<span>📅 ' + fDiaKey + (dObj.peso ? ' · <span style="color:var(--indigo)">⚖️ ' + dObj.peso + ' kg</span>' : '') + '</span>' +
+                             '<span style="color:var(--green)">' + Math.round(sk) + ' / ' + metasCustom.k + ' kcal</span>';
+          cardDia.appendChild(header);
+
+          var detalleMacros = document.createElement('div');
+          detalleMacros.style.fontSize = '12px';
+          detalleMacros.style.color = 'var(--muted)';
+          detalleMacros.style.marginBottom = '8px';
+          detalleMacros.innerHTML = '🍽️ <b>' + dObj.alimentos.length + ' alimentos</b> · ' +
+            '<span style="color:var(--blue)">Prot: <b>' + Math.round(sp) + 'g</b></span> · ' +
+            '<span style="color:var(--amber)">Carbs: <b>' + Math.round(sc) + 'g</b></span> · ' +
+            '<span style="color:var(--rose)">Grasas: <b>' + Math.round(sf) + 'g</b></span>';
+          cardDia.appendChild(detalleMacros);
+
+          if (dObj.fotoCuerpo) {
+            var fotoBox = document.createElement('div');
+            fotoBox.style.marginBottom = '8px';
+
+            var imgEl = document.createElement('img');
+            imgEl.src = dObj.fotoCuerpo;
+            imgEl.style.width = '100%';
+            imgEl.style.height = '160px';
+            imgEl.style.objectFit = 'cover';
+            imgEl.style.borderRadius = '10px';
+            imgEl.style.cursor = 'pointer';
+            imgEl.style.border = '1px solid #cbd5e1';
+            imgEl.onclick = function() {
+              abrirFotoZoom(dObj.fotoCuerpo, 'Foto Corporal - ' + fDiaKey + (dObj.peso ? ' (' + dObj.peso + ' kg)' : ''));
+            };
+            fotoBox.appendChild(imgEl);
+
+            var barraAccionesFoto = document.createElement('div');
+            barraAccionesFoto.className = 'grid3';
+            barraAccionesFoto.style.marginTop = '6px';
+
+            var btnVer = document.createElement('button');
+            btnVer.type = 'button';
+            btnVer.className = 'btn btn-outline';
+            btnVer.style.margin = '0';
+            btnVer.style.padding = '6px';
+            btnVer.style.fontSize = '11px';
+            btnVer.textContent = '🔍 Tamaño Real';
+            btnVer.onclick = function() { abrirFotoZoom(dObj.fotoCuerpo, 'Foto - ' + fDiaKey); };
+
+            var inputCambiar = document.createElement('input');
+            inputCambiar.type = 'file';
+            inputCambiar.accept = 'image/*';
+            inputCambiar.className = 'hide';
+            inputCambiar.onchange = function(ev) {
+              var f = ev.target.files[0];
+              if (!f) return;
+              comprimirImagen(f, 650, function(nuevaB64) {
+                baseDatosDiaria[fDiaKey].fotoCuerpo = nuevaB64;
+                guardarYActualizar();
+                renderizarEvolucion();
+              });
+            };
+
+            var btnCambiar = document.createElement('button');
+            btnCambiar.type = 'button';
+            btnCambiar.className = 'btn btn-outline';
+            btnCambiar.style.margin = '0';
+            btnCambiar.style.padding = '6px';
+            btnCambiar.style.fontSize = '11px';
+            btnCambiar.textContent = '✏️ Cambiar Foto';
+            btnCambiar.onclick = function() { inputCambiar.click(); };
+
+            var btnBorrarFoto = document.createElement('button');
+            btnBorrarFoto.type = 'button';
+            btnBorrarFoto.className = 'btn btn-red';
+            btnBorrarFoto.style.width = '100%';
+            btnBorrarFoto.style.padding = '6px';
+            btnBorrarFoto.style.fontSize = '11px';
+            btnBorrarFoto.textContent = '🗑️ Quitar Foto';
+            btnBorrarFoto.onclick = function() {
+              if (confirm('¿Eliminar únicamente la foto corporal del día ' + fDiaKey + '?')) {
+                baseDatosDiaria[fDiaKey].fotoCuerpo = null;
+                guardarYActualizar();
+                renderizarEvolucion();
+              }
+            };
+
+            barraAccionesFoto.appendChild(btnVer);
+            barraAccionesFoto.appendChild(btnCambiar);
+            barraAccionesFoto.appendChild(btnBorrarFoto);
+            fotoBox.appendChild(inputCambiar);
+            fotoBox.appendChild(barraAccionesFoto);
+            cardDia.appendChild(fotoBox);
+          }
+
+          var accionesDia = document.createElement('div');
+          accionesDia.className = 'grid2';
+          accionesDia.style.marginTop = '8px';
+
+          var btnIrDia = document.createElement('button');
+          btnIrDia.type = 'button';
+          btnIrDia.className = 'btn btn-outline';
+          btnIrDia.style.margin = '0';
+          btnIrDia.style.padding = '7px';
+          btnIrDia.style.fontSize = '11px';
+          btnIrDia.textContent = '📂 Abrir Día en Diario';
+          btnIrDia.onclick = function() {
+            selectorFecha.value = fDiaKey;
+            actualizarVista();
+            document.getElementById('navDiario').click();
+          };
+
+          var btnBorrarDia = document.createElement('button');
+          btnBorrarDia.type = 'button';
+          btnBorrarDia.className = 'btn btn-red';
+          btnBorrarDia.style.width = '100%';
+          btnBorrarDia.style.padding = '7px';
+          btnBorrarDia.style.fontSize = '11px';
+          btnBorrarDia.textContent = '🗑️ Borrar Día Completo';
+          btnBorrarDia.onclick = function() {
+            if (confirm('¿Seguro que quieres borrar todos los datos del día ' + fDiaKey + '?')) {
+              delete baseDatosDiaria[fDiaKey];
+              guardarYActualizar();
+              renderizarEvolucion();
+            }
+          };
+
+          accionesDia.appendChild(btnIrDia);
+          accionesDia.appendChild(btnBorrarDia);
+          cardDia.appendChild(accionesDia);
+          cont.appendChild(cardDia);
+        })(fechasDesc[y]);
+      }
+    }
+
+    // Inicializar al abrir
+    dibujarBaseDatos();
+    actualizarVista();
+  </script>
+</body>
+</html>
